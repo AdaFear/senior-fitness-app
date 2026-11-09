@@ -6,7 +6,6 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const ready = ref(false)
 
-  // Restore session on load, then keep in sync
   supabase.auth.getSession().then(({ data }) => {
     user.value = data.session?.user ?? null
     ready.value = true
