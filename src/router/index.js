@@ -4,6 +4,7 @@ import AppView from '@/views/AppView.vue'
 import LoginView from '../views/LoginView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import ProgramsView from '../views/ProgramsView.vue'
+import TrainingView from '../views/TrainingView.vue'
 
 import { useAuthStore } from '@/stores/auth'
 import { supabase } from '../lib/supabaseClient.js'
@@ -23,9 +24,9 @@ const router = createRouter({
         { path: 'home', name: 'home', component: HomeView },
         { path: 'profile', name: 'profile', component: ProfileView },
         { path: 'programs', name: 'programs', component: ProgramsView },
+        { path: 'workout', name: 'workout', component: TrainingView },
       ],
     },
-
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
