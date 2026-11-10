@@ -40,7 +40,7 @@ __screenshots__/
 *.timestamp-*-*.mjs
 
 #Environment
-.env
+.env.local
 .env.local
 .env.*.local
 
