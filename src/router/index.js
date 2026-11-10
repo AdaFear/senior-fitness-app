@@ -8,6 +8,7 @@ import TrainingView from '../views/TrainingView.vue'
 
 import { useAuthStore } from '@/stores/auth'
 import { supabase } from '../lib/supabaseClient.js'
+import OnboardingView from '@/views/OnboardingView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -21,10 +22,11 @@ const router = createRouter({
         requiresAuth: true,
       },
       children: [
-        { path: 'home', name: 'home', component: HomeView },
-        { path: 'profile', name: 'profile', component: ProfileView },
-        { path: 'programs', name: 'programs', component: ProgramsView },
-        { path: 'workout', name: 'workout', component: TrainingView },
+        { path: 'onboarding', name: 'onboarding', component: OnboardingView, meta: {requiresOnboarding: false} },
+        { path: 'home', name: 'home', component: HomeView, meta: {requiresOnboarding: true} },
+        { path: 'profile', name: 'profile', component: ProfileView, meta: {requiresOnboarding: true} },
+        { path: 'programs', name: 'programs', component: ProgramsView, meta: {requiresOnboarding: true} },
+        { path: 'workout', name: 'workout', component: TrainingView, meta: {requiresOnboarding: true} },
       ],
     },
     {
@@ -45,6 +47,13 @@ router.beforeEach(async (to) => {
   if (to.meta.requiresAuth && !auth.user) {
     return { path: '/', query: { redirect: to.fullPath } }
   }
+
+  if(!auth.onboardingComplete) await auth.refreshOnboarding();
+
+  if (to.meta.requiresOnboarding && !auth.onboardingComplete) {
+    return { name: 'onboarding', query: { redirect: to.fullPath } }
+  }
+
 })
 
 export default router

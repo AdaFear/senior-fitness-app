@@ -19,17 +19,19 @@ const handleLogOut = async () => {
 </script>
 
 <template>
-  <DesktopNav v-if="deviceType == 2"></DesktopNav>
+  <DesktopNav v-if="deviceType == 1"></DesktopNav>
   <div class="mobile-view" v-else>
     <MobileNav></MobileNav>
     <button
-      class="top-1.5 right-1.5 fixed bg-blue-500 rounded-4xl p-4 transition duration-300 hover:bg-blue-600 cursor-pointer"
+      class="bottom-30 left-1.5 fixed bg-blue-500 rounded-4xl p-4 transition duration-300 hover:bg-blue-600 cursor-pointer"
       @click="handleLogOut"
     >
       <font-awesome-icon icon="fa-solid fa-right-from-bracket" size="xl" fixed-width />
       <span class="mobile-nav-item-label">Logga ut</span>
     </button>
   </div>
+  <p v-if="!auth.ready">Waiting</p>
+
   <RouterView></RouterView>
 </template>
 
