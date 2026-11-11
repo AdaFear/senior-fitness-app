@@ -1,7 +1,25 @@
-<script setup></script>
+<script setup>
+import { useAuthStore } from '@/stores/auth'
+import ProfileCard from '@/components/ProfileCard.vue'
+import LogoutButton from '@/components/LogoutButton.vue'
+
+const auth = useAuthStore()
+</script>
 
 <template>
-  <div><h2>Profile</h2></div>
-</template>
+  <div class="mx-auto max-w-md p-4">
+    <h2 class="mb-4 text-2xl font-bold text-gray-900">Profil</h2>
 
-<style scoped></style>
+    <ProfileCard />
+
+    <RouterLink
+      v-if="auth.isAdmin"
+      :to="{ name: 'admin' }"
+      class="mt-4 block rounded-xl bg-blue-500 py-3 text-center font-semibold text-white hover:bg-blue-600"
+    >
+      Adminpanel
+    </RouterLink>
+
+    <div class="mt-4"><LogoutButton /></div>
+  </div>
+</template>

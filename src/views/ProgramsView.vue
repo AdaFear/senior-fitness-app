@@ -1,18 +1,10 @@
 <script setup>
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
-
-function enterWorkout() {
-  router.replace({ name: 'workout' })
-}
+import CourseList from '@/components/CourseList.vue'
 </script>
 
 <template>
-  <div>
-    <h2>Programs</h2>
-    <button class="bg-green-700 p-4 rounded-2xl" @click="enterWorkout()">Workout</button>
+  <div class="mx-auto max-w-3xl p-4">
+    <h2 class="mb-4 text-2xl font-bold text-gray-900">Program</h2>
+    <CourseList />
   </div>
 </template>
-
-<style scoped></style>

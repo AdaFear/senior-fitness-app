@@ -1,155 +1,56 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { fetchCourse } from '@/lib/courses'
+import { renderContent, toEmbedUrl } from '@/lib/courseUtils'
 
 import TrainingWorkoutAmountPill from '@/components/TrainingWorkoutAmountPill.vue'
 import TrainingWorkoutEndPage from '@/components/TrainingWorkoutEndPage.vue'
 
-// [name, steps, goal, extra]
-// goal: { type: 'time', seconds, autostart? } or { type: 'reps', reps, perSide? }
-const Trainings = [
-  [
-    'Sittande knästräck',
-    ['Sträck ett knä och sänk långsamt.', 'Håll låret mot sitsen och ryggen upprätt.'],
-    { type: 'reps', reps: '8–12', perSide: true },
-    {
-      id: 'SI01',
-      category: 'Sittande styrka',
-      easier: 'Kortare rörelse',
-      harder: 'Lätt fotledsvikt',
-    },
-  ],
+const route = useRoute()
+const router = useRouter()
 
-  [
-    'Sittande hällyft',
-    ['Lyft hälarna medan tårna är kvar i golvet.', 'Pressa jämnt genom framfoten.'],
-    { type: 'reps', reps: '10–15' },
-    {
-      id: 'SI02',
-      category: 'Sittande styrka',
-      easier: 'En fot i taget',
-      harder: 'Fler repetitioner',
-    },
-  ],
+// ---------- Data ----------
+const course = ref(null)
+const loading = ref(true)
+const error = ref('')
 
-  [
-    'Sittande tålyft',
-    ['Lyft framfötterna med hälarna i golvet.', 'Låt inte knäna falla in.'],
-    { type: 'reps', reps: '10–15' },
-    { id: 'SI03', category: 'Sittande styrka', easier: 'Mindre lyft', harder: 'Långsammare tempo' },
-  ],
-
-  [
-    'Sittande marsch',
-    ['Lyft växelvis ett knä.', 'Sitt stabilt utan att gunga bakåt.'],
-    { type: 'time', seconds: 30 },
-    {
-      id: 'SI04',
-      category: 'Sittande styrka',
-      easier: 'Lägre knälyft',
-      harder: 'Längre arbetsintervall',
-    },
-  ],
-
-  [
-    'Sittande ben ut åt sidan',
-    ['För knät lätt utåt och tillbaka.', 'Bäcken och överkropp är stilla.'],
-    { type: 'reps', reps: '8–12', perSide: true },
-    {
-      id: 'SI05',
-      category: 'Sittande styrka',
-      easier: 'Mindre rörelse',
-      harder: 'Lätt band ovanför knäna',
-    },
-  ],
-
-  [
-    'Sittande bicepscurl',
-    ['Böj armbågarna och sänk kontrollerat.', 'Håll armbågarna nära kroppen.'],
-    { type: 'reps', reps: '8–12' },
-    { id: 'SI06', category: 'Sittande styrka', easier: 'Utan vikt', harder: 'Lätta hantlar' },
-  ],
-
-  [
-    'Sittande skulderbladsdrag',
-    ['För skulderbladen lätt bakåt och släpp.', 'Höj inte axlarna mot öronen.'],
-    { type: 'reps', reps: '8–12' },
-    {
-      id: 'SI07',
-      category: 'Sittande styrka',
-      easier: 'Mindre rörelse',
-      harder: 'Lätt träningsband',
-    },
-  ],
-
-  [
-    'Sittande bröstpress med band',
-    ['Pressa händerna framåt och återgå.', 'Arbeta i smärtfri axelbana.'],
-    { type: 'reps', reps: '8–12' },
-    { id: 'SI08', category: 'Sittande styrka', easier: 'Utan band', harder: 'Något fastare band' },
-  ],
-
-  [
-    'Uppresning från stol',
-    [
-      'Res dig upp från stabil stol och sätt dig kontrollerat.',
-      'Fötter i golvet, stå stadigt före nästa repetition.',
-    ],
-    { type: 'reps', reps: '6–12' },
-    {
-      id: 'ST01',
-      category: 'Stående styrka',
-      easier: 'Använd armstöd/högre sits',
-      harder: 'Lägre stol eller lätt vikt',
-    },
-  ],
-
-  [
-    'Knäböj till stol',
-    ['Böj höft och knän mot stolen; res dig igen.', 'Ha stolen bakom som säkerhetsstopp.'],
-    { type: 'reps', reps: '6–12' },
-    {
-      id: 'ST02',
-      category: 'Stående styrka',
-      easier: 'Liten böjning med stöd',
-      harder: 'Större rörelse inom kontroll',
-    },
-  ],
-
-  [
-    'Armhävning mot vägg',
-    ['Böj armbågar mot väggen och pressa tillbaka.', 'Håll kroppen rak och händer i axelhöjd.'],
-    { type: 'reps', reps: '8–12' },
-    {
-      id: 'ST03',
-      category: 'Stående styrka',
-      easier: 'Stå närmare väggen',
-      harder: 'Stå längre bort',
-    },
-  ],
-
-  [
-    'Stående rodd med band',
-    ['Dra armbågar bakåt och återgå långsamt.', 'Förankra bandet säkert; axlar sänkta.'],
-    { type: 'reps', reps: '8–12' },
-    { id: 'ST04', category: 'Stående styrka', easier: 'Lättare band', harder: 'Hårdare band' },
-  ],
-]
-
-const goal = computed(() => Trainings[completedWorkouts.value][2])
-// const extra = computed(() => Trainings[completedWorkouts.value][3])
-const isTimed = computed(() => goal.value.type === 'time')
-const isLast = computed(() => completedWorkouts.value + 1 >= numberOfWorkouts)
-const isFinished = ref(false)
-const repsLabel = computed(() => (goal.value.perSide ? 'gånger per sida' : 'gånger'))
-
-const numberOfWorkouts = Trainings.length
+const exercises = computed(() => course.value?.exercises ?? [])
+const numberOfWorkouts = computed(() => exercises.value.length)
 const completedWorkouts = ref(0)
+const isFinished = ref(false)
+
+const current = computed(() => exercises.value[completedWorkouts.value])
+const isTimed = computed(() => !!current.value?.seconds)
+const isLast = computed(() => completedWorkouts.value + 1 >= numberOfWorkouts.value)
+const repsLabel = computed(() => (current.value?.per_side ? 'gånger per sida' : 'gånger'))
+
+const videoUrl = computed(() => current.value?.video_url ?? '')
+const embedUrl = computed(() => toEmbedUrl(videoUrl.value))
+const isDirectVideo = computed(
+  () => !embedUrl.value && /\.(mp4|webm|ogg)(\?|$)/i.test(videoUrl.value),
+)
+const hasVideo = computed(() => !!embedUrl.value || isDirectVideo.value)
+
+onMounted(async () => {
+  window.addEventListener('keydown', onKeydown)
+  try {
+    course.value = await fetchCourse(route.params.courseId)
+    if (!course.value) error.value = 'Programmet hittades inte.'
+    else if (!course.value.exercises.length) error.value = 'Programmet har inga övningar än.'
+    else resetTimer()
+  } catch (e) {
+    error.value = 'Kunde inte hämta programmet: ' + e.message
+  } finally {
+    loading.value = false
+  }
+})
 
 const increase = () => {
   if (isLast.value) {
+    stopInterval()
     isFinished.value = true
-  } else if (completedWorkouts.value + 1 < numberOfWorkouts) {
+  } else {
     completedWorkouts.value++
     resetTimer()
     scrollToTop()
@@ -165,8 +66,8 @@ const decrease = () => {
 }
 
 // ---------- Timer ----------
-const exerciseSeconds = computed(() => goal.value.seconds ?? 30)
-const timeLeft = ref(exerciseSeconds.value)
+const exerciseSeconds = computed(() => current.value?.seconds ?? 30)
+const timeLeft = ref(30)
 const timerState = ref('idle') // 'idle' | 'running' | 'paused' | 'done'
 let intervalId = null
 
@@ -208,8 +109,10 @@ function startTimer() {
       timerState.value = 'done'
       navigator.vibrate?.(300)
 
+      const wasLast = isLast.value
       increase()
-      if (isTimed.value) startTimer()
+      // FIXED: don't restart the timer behind the end page after the last exercise
+      if (!wasLast && isTimed.value) startTimer()
     }
   }, 1000)
 }
@@ -219,6 +122,7 @@ function resetTimer() {
   timeLeft.value = exerciseSeconds.value
   timerState.value = 'idle'
 }
+
 function pauseTimer() {
   stopInterval()
   timerState.value = 'paused'
@@ -233,24 +137,20 @@ function toggleTimer() {
 const videoOpen = ref(false)
 const modalVideoEl = ref(null)
 
-const videoLink = 'https://www.w3schools.com/tags/mov_bbb.mp4'
-
 async function openVideo() {
   videoOpen.value = true
   await nextTick()
-  modalVideoEl.value?.play().catch(() => {})
+  modalVideoEl.value?.play?.().catch(() => {})
 }
 
 function closeVideo() {
-  modalVideoEl.value?.pause()
-  videoOpen.value = false
+  modalVideoEl.value?.pause?.()
+  videoOpen.value = false // removing the iframe also stops YouTube/Vimeo playback
 }
 
 function onKeydown(e) {
   if (e.key === 'Escape' && videoOpen.value) closeVideo()
 }
-
-onMounted(() => window.addEventListener('keydown', onKeydown))
 
 onBeforeUnmount(() => {
   stopInterval()
@@ -263,7 +163,6 @@ async function scrollToTop() {
   await nextTick()
   scrollArea.value?.scrollTo({ top: 0, behavior: 'smooth' })
 }
-const router = useRouter()
 
 function exitWorkout() {
   stopInterval()
@@ -272,9 +171,29 @@ function exitWorkout() {
 </script>
 
 <template>
+  <TrainingWorkoutEndPage v-if="isFinished" class="z-50" />
+
+  <!-- Loading / error -->
   <div
-    v-if="!isFinished"
-    class="fixed inset-0 flex flex-col bg-linear-to-t from-orange-200 to-white text-white px-5 pt-5 pb-5 sm:px-8 md:px-[5vw] lg:px-[5vw]"
+    v-else-if="loading || error"
+    class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-linear-to-t from-orange-200 to-white p-6"
+  >
+    <p v-if="loading" class="text-xl text-stone-800">Laddar...</p>
+    <template v-else>
+      <p class="text-xl text-red-600">{{ error }}</p>
+      <button
+        type="button"
+        class="rounded-full bg-white px-5 py-2 text-lg font-bold text-stone-800 shadow-md"
+        @click="exitWorkout"
+      >
+        Tillbaka
+      </button>
+    </template>
+  </div>
+
+  <div
+    v-else-if="current"
+    class="fixed inset-0 z-50 flex flex-col bg-linear-to-t from-orange-200 to-white text-white px-5 pt-5 pb-5 sm:px-8 md:px-[5vw] lg:px-[5vw]"
   >
     <header class="shrink-0">
       <div class="flex items-center justify-between gap-3">
@@ -301,43 +220,37 @@ function exitWorkout() {
         <h1
           class="min-w-0 flex-1 text-3xl font-bold leading-tight tracking-tight text-stone-900 sm:text-5xl"
         >
-          {{ Trainings[completedWorkouts][0] }}
+          {{ current.title }}
         </h1>
       </div>
     </header>
 
     <div ref="scrollArea" class="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-2">
-      <!-- Video preview card, opens the pop-up -->
+      <!-- Video card, opens the pop-up (only if the exercise has a video) -->
       <button
+        v-if="hasVideo"
         type="button"
         class="mt-4 flex w-full items-center gap-4 rounded-3xl bg-white p-2.5 text-left shadow-sm transition active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-400"
         aria-label="Öppna video"
         @click="openVideo"
       >
-        <span class="relative block h-16 w-28 shrink-0 overflow-hidden rounded-2xl bg-stone-800">
-          <video
-            playsinline
-            muted
-            preload="metadata"
-            class="h-full w-full object-cover"
-            :src="videoLink + '#t=0.1'"
-          ></video>
-          <span class="absolute inset-0 flex items-center justify-center bg-stone-900/30">
-            <span class="flex size-9 items-center justify-center rounded-full bg-white/95 shadow">
-              <svg
-                class="size-4 translate-x-0.5 text-orange-600"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M8 5v14l11-7z" />
-              </svg>
-            </span>
+        <span
+          class="relative flex h-16 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-stone-800"
+        >
+          <span class="flex size-9 items-center justify-center rounded-full bg-white/95 shadow">
+            <svg
+              class="size-4 translate-x-0.5 text-orange-600"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M8 5v14l11-7z" />
+            </svg>
           </span>
         </span>
         <span class="text-xl font-bold text-stone-900">Se hur du ska göra</span>
       </button>
 
-      <!-- Steps -->
+      <!-- Steps + goal -->
       <div class="mt-6 flex w-full items-center justify-between gap-3 p-1.5 sm:mt-8">
         <h2 class="text-sm font-bold uppercase tracking-[0.15em] text-stone-500">Steg:</h2>
 
@@ -347,7 +260,7 @@ function exitWorkout() {
           class="flex shrink-0 items-baseline gap-2 rounded-full bg-white px-5 py-2 shadow-md ring-1 ring-stone-900/5"
         >
           <span
-            class="text-2xl font-bold tabular-nums leading-none text-stone-900"
+            class="text-2xl font-bold tabular-nums leading-none"
             :class="timerState === 'done' ? 'text-green-700' : 'text-stone-900'"
           >
             {{ timeText }}
@@ -363,19 +276,22 @@ function exitWorkout() {
             Nollställ
           </button>
         </div>
-        <!-- Reps: big number + label -->
+        <!-- Reps -->
         <div
-          v-else
+          v-else-if="current.reps"
           class="flex shrink-0 items-baseline gap-2 rounded-full bg-white px-6 py-2 shadow-md"
         >
-          <p class="text-2xl font-bold tabular-nums leading-none text-stone-900">{{ goal.reps }}</p>
+          <p class="text-2xl font-bold tabular-nums leading-none text-stone-900">
+            {{ current.reps }}
+          </p>
           <p class="text-sm font-bold uppercase tracking-wide text-stone-500">{{ repsLabel }}</p>
         </div>
       </div>
+
       <ol class="space-y-2.5">
         <li
-          v-for="(todo, i) in Trainings[completedWorkouts][1]"
-          :key="todo"
+          v-for="(todo, i) in current.steps"
+          :key="i"
           class="flex items-start gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-stone-900/5"
         >
           <span
@@ -386,6 +302,13 @@ function exitWorkout() {
           <span class="pt-1 text-xl leading-snug text-stone-800 sm:text-3xl">{{ todo }}</span>
         </li>
       </ol>
+
+      <!-- Extra markdown text from the admin panel (optional) -->
+      <div
+        v-if="current.content"
+        class="content mt-4 rounded-2xl bg-white p-4 text-lg text-stone-800 shadow-sm"
+        v-html="renderContent(current.content)"
+      />
     </div>
 
     <!-- Training buttons -->
@@ -434,7 +357,7 @@ function exitWorkout() {
           aria-label="Nästa övning"
           class="flex size-18 shrink-0 items-center justify-center rounded-full bg-green-700 text-white transition enabled:hover:bg-green-600 enabled:active:scale-90 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-400 disabled:cursor-not-allowed disabled:bg-stone-200 disabled:text-stone-400"
           @click="increase"
-          :disabled="completedWorkouts + 1 >= numberOfWorkouts"
+          :disabled="isLast"
         >
           <svg
             class="size-6"
@@ -467,9 +390,7 @@ function exitWorkout() {
       >
         <div class="shrink-0 bg-orange-50 px-4 py-3">
           <div class="flex items-center justify-between gap-3">
-            <p class="truncate text-xl font-bold text-stone-900">
-              {{ Trainings[completedWorkouts][0] }}
-            </p>
+            <p class="truncate text-xl font-bold text-stone-900">{{ current.title }}</p>
             <button
               type="button"
               class="shrink-0 rounded-full bg-white px-5 py-2 text-lg font-bold text-stone-800 shadow-md ring-1 ring-stone-900/10 transition hover:bg-orange-100 active:scale-95 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-orange-400"
@@ -481,7 +402,6 @@ function exitWorkout() {
 
           <!-- Goal above the video -->
           <div class="mt-3 flex w-full items-center justify-between gap-3">
-            <!-- Time -->
             <div
               v-if="isTimed"
               class="flex shrink-0 items-baseline gap-2 rounded-full bg-white px-5 py-2 shadow-md ring-1 ring-stone-900/5"
@@ -504,20 +424,19 @@ function exitWorkout() {
               </button>
             </div>
 
-            <!-- Reps -->
             <div
-              v-else
+              v-else-if="current.reps"
               class="flex shrink-0 items-baseline gap-2 rounded-full bg-white px-6 py-2 shadow-md ring-1 ring-stone-900/5"
             >
               <p class="text-2xl font-bold tabular-nums leading-none text-stone-900">
-                {{ goal.reps }}
+                {{ current.reps }}
               </p>
               <p class="text-sm font-bold uppercase tracking-wide text-stone-500">
                 {{ repsLabel }}
               </p>
             </div>
+            <div v-else />
 
-            <!-- Action button -->
             <button
               v-if="isTimed"
               type="button"
@@ -538,27 +457,36 @@ function exitWorkout() {
           </div>
         </div>
 
+        <!-- YouTube / Vimeo -->
+        <iframe
+          v-if="embedUrl"
+          :src="embedUrl"
+          class="min-h-0 w-full flex-1 border-0 bg-black"
+          allow="autoplay; encrypted-media; fullscreen"
+          allowfullscreen
+        />
+        <!-- Direct video file -->
         <video
+          v-else
           ref="modalVideoEl"
+          :src="videoUrl"
           playsinline
           muted
           loop
           controls
           class="min-h-0 w-full flex-1 bg-black object-contain"
-        >
-          <source :src="videoLink" type="video/mp4" />
-        </video>
+        />
       </div>
     </Transition>
-  </div>
-  <div v-else>
-    <TrainingWorkoutEndPage />
   </div>
 </template>
 
 <style scoped>
-html,
-body {
-  min-height: 100dvh;
-}
+.content :deep(h1) { font-size: 1.75rem; font-weight: 700; margin: 1rem 0 0.5rem; }
+.content :deep(h2) { font-size: 1.4rem; font-weight: 700; margin: 1rem 0 0.5rem; }
+.content :deep(h3) { font-size: 1.15rem; font-weight: 700; margin: 0.75rem 0 0.5rem; }
+.content :deep(p) { margin: 0.5rem 0; }
+.content :deep(ul) { list-style: disc; padding-left: 1.5rem; }
+.content :deep(ol) { list-style: decimal; padding-left: 1.5rem; }
+.content :deep(img) { max-width: 100%; border-radius: 0.75rem; }
 </style>

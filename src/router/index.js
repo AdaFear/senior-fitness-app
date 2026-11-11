@@ -5,9 +5,8 @@ import LoginView from '../views/LoginView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import ProgramsView from '../views/ProgramsView.vue'
 import TrainingView from '../views/TrainingView.vue'
-
+import AdminView from '../views/AdminView.vue'
 import { useAuthStore } from '@/stores/auth'
-import { supabase } from '../lib/supabaseClient.js'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -17,16 +16,16 @@ const router = createRouter({
       path: '/app',
       name: 'app',
       component: AppView,
-      meta: {
-        requiresAuth: true,
-      },
       children: [
         { path: 'home', name: 'home', component: HomeView },
         { path: 'profile', name: 'profile', component: ProfileView },
         { path: 'programs', name: 'programs', component: ProgramsView },
-        { path: 'workout', name: 'workout', component: TrainingView },
+        // CHANGED: needs to know which course to run
+        { path: 'workout/:courseId', name: 'workout', component: TrainingView },
+        { path: 'admin', name: 'admin', component: AdminView, meta: { requiresAdmin: true } },
       ],
     },
+    { path: '/admin', redirect: { name: 'admin' } },
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
@@ -37,13 +36,14 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
+  await auth.init
 
-  if (!auth.ready) {
-    await supabase.auth.getSession()
+  if (to.name === 'login') {
+    return auth.user ? { name: 'home' } : true
   }
-
-  if (to.meta.requiresAuth && !auth.user) {
-    return { path: '/', query: { redirect: to.fullPath } }
+  if (!auth.user) return { name: 'login' }
+  if (to.matched.some((r) => r.meta.requiresAdmin) && !auth.isAdmin) {
+    return { name: 'home' }
   }
 })
 
