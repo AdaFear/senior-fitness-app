@@ -42,6 +42,7 @@ const handleRegister = async () => {
 <template>
   <div class="w-full max-w-xs m-auto">
     <form @submit.prevent class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+      >>>>>>> b38e4ee5f003846ed778a3e3d5bc8d1e0b4301b4
       <div class="mb-4">
         <label class="block text-gray-700 text-sm font-bold mb-2" for="email"> Email </label>
         <input
