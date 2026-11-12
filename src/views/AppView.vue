@@ -5,7 +5,6 @@ import DesktopNav from '../components/DesktopNav.vue'
 import { RouterView } from 'vue-router'
 import { ref } from 'vue'
 
-const deviceType = ref(2)
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
 
@@ -16,6 +15,7 @@ const handleLogOut = async () => {
   await auth.signOut()
   router.push('/')
 }
+const deviceType = ref(2)
 </script>
 
 <template>
