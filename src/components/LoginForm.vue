@@ -63,7 +63,7 @@ async function guestLogin() {
 
 <template>
   <div class="w-full max-w-xs m-auto">
-    <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" @submit.prevent="signIn">
+    <form @submit.prevent class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
       <div class="mb-4">
         <label class="block text-gray-700 text-sm font-bold mb-2" for="email">Email</label>
         <input
@@ -80,6 +80,8 @@ async function guestLogin() {
       <div class="mb-6">
         <label class="block text-gray-700 text-sm font-bold mb-2" for="password">Lösenord</label>
         <input
+          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+          :class="{ 'border-red-400': form.password.length < 8 }"
           id="password"
           v-model="password"
           type="password"
@@ -89,7 +91,7 @@ async function guestLogin() {
           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
           :class="{ 'border-red-500': passwordTooShort }"
         />
-        <p v-if="passwordTooShort" class="text-red-500 text-xs italic">
+        <p v-if="form.password.length < 8" class="text-red-500 text-xs italic">
           Lösenordet måste vara minst 8 tecken långt.
         </p>
       </div>

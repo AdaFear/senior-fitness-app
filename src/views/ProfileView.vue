@@ -1,7 +1,7 @@
 <script setup>
 import { useAuthStore } from '@/stores/auth'
 import ProfileCard from '@/components/ProfileCard.vue'
-import LogoutButton from '@/components/LogoutButton.vue'
+import LogOutButton from '@/components/LogOutButton.vue'
 
 const auth = useAuthStore()
 </script>
@@ -20,6 +20,6 @@ const auth = useAuthStore()
       Adminpanel
     </RouterLink>
 
-    <div class="mt-4"><LogoutButton /></div>
+    <div class="mt-4"><LogOutButton class="flex-none h-20" /></div>
   </div>
 </template>

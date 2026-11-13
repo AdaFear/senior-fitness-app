@@ -1,12 +1,13 @@
-
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { supabase } from '../lib/supabaseClient.js'
+import { useOnboardingStore } from './onboarding.js'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
   const isAdmin = ref(false)
   const ready = ref(false)
+  const onboardingComplete = ref(false)
 
   async function loadProfile() {
     if (!user.value) {
@@ -22,14 +23,22 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // The router guard awaits this, so pages never render before we know who the user is
-  const init = supabase.auth.getSession().then(async ({ data }) => {
-    user.value = data.session?.user ?? null
-    await loadProfile()
-    ready.value = true
-  })
+  const init = supabase.auth
+    .getSession()
+    .then(async ({ data }) => {
+      user.value = data.session?.user ?? null
+      await loadProfile()
+    })
+    .catch((e) => console.error('getSession failed', e))
+    .finally(() => {
+      ready.value = true
+    })
 
   supabase.auth.onAuthStateChange((_event, session) => {
+    const oldId = user.value?.id ?? null
+    const newId = session?.user?.id ?? null
     user.value = session?.user ?? null
+    if (oldId !== newId) onboardingComplete.value = false
     // setTimeout avoids a known deadlock when calling supabase inside this callback
     setTimeout(loadProfile, 0)
   })
@@ -45,7 +54,7 @@ export const useAuthStore = defineStore('auth', () => {
     return result
   }
 
-  // --- GUEST LOGIN (TEMPRORARY!!!) ---
+  // --- GUEST LOGIN (TEMPORARY!!!) ---
   const signInGuest = async () => {
     const result = await supabase.auth.signInWithPassword({
       email: import.meta.env.VITE_GUEST_EMAIL,
@@ -58,7 +67,27 @@ export const useAuthStore = defineStore('auth', () => {
     return result
   }
 
-  const signOut = () => supabase.auth.signOut()
+  const signOut = async () => {
+    await supabase.auth.signOut()
+    useOnboardingStore().reset()
+  }
 
-  return { user, isAdmin, ready, init, signUp, signIn, signInGuest, signOut }
+  const refreshOnboarding = async () => {
+    if (!user.value) return
+    const { data, error } = await supabase.rpc('is_onboarded')
+    onboardingComplete.value = error ? false : !!data
+  }
+
+  return {
+    user,
+    isAdmin,
+    ready,
+    init,
+    onboardingComplete,
+    refreshOnboarding,
+    signUp,
+    signIn,
+    signInGuest,
+    signOut,
+  }
 })
