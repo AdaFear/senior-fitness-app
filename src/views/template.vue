@@ -1,4 +1,4 @@
-<script stup></script>
+<script setup></script>
 
 <template>
   <div></div>

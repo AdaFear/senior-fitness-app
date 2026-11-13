@@ -1,7 +1,9 @@
-<script setup></script>
+<script setup>
+import LogOutButton from '@/components/LogOutButton.vue'
+</script>
 
 <template>
-  <div><h2>Profile</h2></div>
+  <LogOutButton class="flex-none h-20"></LogOutButton>
 </template>
 
 <style scoped></style>
