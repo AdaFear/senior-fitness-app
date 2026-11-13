@@ -7,7 +7,6 @@ import ProgramsView from '../views/ProgramsView.vue'
 import TrainingView from '../views/TrainingView.vue'
 import AdminView from '../views/AdminView.vue'
 import { useAuthStore } from '@/stores/auth'
-import { supabase } from '../lib/supabaseClient.js'
 import OnboardingView from '@/views/OnboardingView.vue'
 
 const router = createRouter({
