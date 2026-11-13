@@ -1,63 +1,55 @@
 <script setup>
-import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { reactive } from 'vue'
 
-const router = useRouter()
 const auth = useAuthStore()
 
-const email = ref('')
-const password = ref('')
-const loading = ref(false)
-const error = ref('')
-const info = ref('')
+const router = useRouter()
 
-const passwordTooShort = computed(() => password.value.length > 0 && password.value.length < 8)
+const form = reactive({
+  email: '',
+  password: '',
+})
 
-async function signIn() {
-  error.value = ''
-  info.value = ''
-  loading.value = true
-  const { error: err } = await auth.signIn(email.value, password.value)
-  loading.value = false
-  if (err) {
-    error.value = 'Fel email eller lösenord.'
-    return
+const handleLogin = async () => {
+  try {
+    const { error } = await auth.signIn(form.email, form.password)
+    router.push('/app/home')
+    if (error) {
+      alert(error.message)
+    }
+  } catch (error) {
+    alert(error.message)
   }
-  router.push('/app/home')
+  console.log(auth.user)
 }
 
-async function signUp() {
-  error.value = ''
-  info.value = ''
-  if (passwordTooShort.value || !email.value) {
-    error.value = 'Fyll i email och ett lösenord på minst 8 tecken.'
-    return
-  }
-  loading.value = true
-  const { data, error: err } = await auth.signUp(email.value, password.value)
-  loading.value = false
-  if (err) {
-    error.value = err.message
-    return
-  }
-  if (data.session) {
+const handleRegister = async () => {
+  try {
+    const { error } = await auth.signUp(form.email, form.password)
     router.push('/app/home')
-  } else {
-    info.value = 'Konto skapat! Kolla din email och bekräfta den innan du loggar in.'
+    if (error) {
+      alert(error.message)
+    }
+  } catch (error) {
+    alert(error.message)
   }
+  console.log(auth.user)
 }
 
 // GUEST: remove this function
-async function guestLogin() {
-  loading.value = true
-  const { error: err } = await auth.signInGuest()
-  loading.value = false
-  if (err) {
-    error.value = 'Gästinloggning misslyckades: ' + err.message
-    return
+const handleGuestLogin = async () => {
+  try {
+    const { error } = await auth.signInGuest()
+    if (error) {
+      alert('Gästinloggning misslyckades: ' + error.message)
+      return
+    }
+    router.push('/app/home')
+  } catch (error) {
+    alert(error.message)
   }
-  router.push('/app/home')
 }
 </script>
 
@@ -65,53 +57,47 @@ async function guestLogin() {
   <div class="w-full max-w-xs m-auto">
     <form @submit.prevent class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
       <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2" for="email">Email</label>
+        <label class="block text-gray-700 text-sm font-bold mb-2" for="email"> Email </label>
         <input
-          id="email"
-          v-model="email"
-          type="email"
-          autocomplete="email"
-          required
-          placeholder="Email"
           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          id="email"
+          type="email"
+          placeholder="Email"
+          v-model="form.email"
         />
       </div>
-
       <div class="mb-6">
-        <label class="block text-gray-700 text-sm font-bold mb-2" for="password">Lösenord</label>
+        <label class="block text-gray-700 text-sm font-bold mb-2" for="password"> Lösenord </label>
         <input
           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
           :class="{ 'border-red-400': form.password.length < 8 }"
           id="password"
-          v-model="password"
           type="password"
-          autocomplete="current-password"
-          required
           placeholder="******************"
-          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
-          :class="{ 'border-red-500': passwordTooShort }"
+          v-model="form.password"
         />
         <p v-if="form.password.length < 8" class="text-red-500 text-xs italic">
           Lösenordet måste vara minst 8 tecken långt.
         </p>
       </div>
-
-      <p v-if="error" class="text-red-500 text-sm mb-3">{{ error }}</p>
-      <p v-if="info" class="text-green-600 text-sm mb-3">{{ info }}</p>
-
+      <a
+        class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
+        href="#"
+      >
+        Forgot Password?
+      </a>
       <div class="flex items-center justify-between">
         <button
-          type="submit"
-          :disabled="loading"
-          class="bg-blue-500 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-2 px-4 rounded"
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          type="button"
+          @click="handleLogin"
         >
           Sign In
         </button>
         <button
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           type="button"
-          :disabled="loading"
-          @click="signUp"
-          class="bg-blue-500 hover:bg-blue-700 disabled:opacity-50 text-white font-bold py-2 px-4 rounded"
+          @click="handleRegister"
         >
           Sign Up
         </button>
@@ -119,13 +105,14 @@ async function guestLogin() {
 
       <!-- GUEST: remove this button -->
       <button
-        type="button"
-        :disabled="loading"
-        @click="guestLogin"
         class="mt-4 w-full border border-gray-400 text-gray-700 py-2 rounded hover:bg-gray-100"
+        type="button"
+        @click="handleGuestLogin"
       >
         Fortsätt som gäst
       </button>
     </form>
   </div>
 </template>
+
+<style scoped></style>

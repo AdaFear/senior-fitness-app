@@ -1,11 +1,11 @@
 <script setup>
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const auth = useAuthStore()
 
-async function logout() {
+const handleLogOut = async () => {
   await auth.signOut()
   router.push('/')
 }
@@ -13,10 +13,12 @@ async function logout() {
 
 <template>
   <button
-    type="button"
-    class="w-full rounded-xl border border-gray-400 py-3 font-semibold text-gray-700 hover:bg-gray-100"
-    @click="logout"
+    class="mobile-nav-item bg-blue-500 flex rounded-4xl justify-start gap-2 text-center flex-1 h-full text-xl p-4 transition duration-300 hover:bg-blue-600 cursor-pointer"
+    @click="handleLogOut"
   >
-    Logga ut
+    <font-awesome-icon icon="fa-solid fa-right-from-bracket" size="xl" fixed-width />
+    <span class="mobile-nav-item-label">Logga ut</span>
   </button>
 </template>
+
+<style scoped></style>
