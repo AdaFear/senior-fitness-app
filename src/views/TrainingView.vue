@@ -482,11 +482,34 @@ function exitWorkout() {
 </template>
 
 <style scoped>
-.content :deep(h1) { font-size: 1.75rem; font-weight: 700; margin: 1rem 0 0.5rem; }
-.content :deep(h2) { font-size: 1.4rem; font-weight: 700; margin: 1rem 0 0.5rem; }
-.content :deep(h3) { font-size: 1.15rem; font-weight: 700; margin: 0.75rem 0 0.5rem; }
-.content :deep(p) { margin: 0.5rem 0; }
-.content :deep(ul) { list-style: disc; padding-left: 1.5rem; }
-.content :deep(ol) { list-style: decimal; padding-left: 1.5rem; }
-.content :deep(img) { max-width: 100%; border-radius: 0.75rem; }
+.content :deep(h1) {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 1rem 0 0.5rem;
+}
+.content :deep(h2) {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 1rem 0 0.5rem;
+}
+.content :deep(h3) {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0.75rem 0 0.5rem;
+}
+.content :deep(p) {
+  margin: 0.5rem 0;
+}
+.content :deep(ul) {
+  list-style: disc;
+  padding-left: 1.5rem;
+}
+.content :deep(ol) {
+  list-style: decimal;
+  padding-left: 1.5rem;
+}
+.content :deep(img) {
+  max-width: 100%;
+  border-radius: 0.75rem;
+}
 </style>

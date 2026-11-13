@@ -19,7 +19,11 @@ const isDirectVideo = (url) => /\.(mp4|webm|ogg)(\?|$)/i.test(url)
 
 async function loadAll() {
   const [c, e, l] = await Promise.all([
-    supabase.from('courses').select('*').order('sort_order').order('created_at', { ascending: false }),
+    supabase
+      .from('courses')
+      .select('*')
+      .order('sort_order')
+      .order('created_at', { ascending: false }),
     supabase.from('exercises').select('*').order('created_at', { ascending: false }),
     supabase.from('course_exercises').select('*'),
   ])
@@ -267,7 +271,9 @@ onMounted(loadAll)
       <button :class="{ active: tab === 'exercises' }" @click="tab = 'exercises'">Exercises</button>
     </div>
 
-    <p v-if="message"><strong>{{ message }}</strong></p>
+    <p v-if="message">
+      <strong>{{ message }}</strong>
+    </p>
 
     <!-- ============ COURSES ============ -->
     <section v-if="tab === 'courses'">
@@ -276,10 +282,14 @@ onMounted(loadAll)
       <label>Title<br /><input v-model="cTitle" style="width: 100%" /></label>
 
       <br /><br />
-      <label>Description<br /><textarea v-model="cDescription" rows="3" style="width: 100%" /></label>
+      <label
+        >Description<br /><textarea v-model="cDescription" rows="3" style="width: 100%" />
+      </label>
 
       <br /><br />
-      <label>Level (number) <input v-model.number="cLevel" type="number" min="1" style="width: 70px" /></label>
+      <label
+        >Level (number) <input v-model.number="cLevel" type="number" min="1" style="width: 70px"
+      /></label>
       &nbsp;
       <label>Sort order <input v-model.number="cSort" type="number" style="width: 70px" /></label>
       &nbsp;
@@ -335,7 +345,8 @@ onMounted(loadAll)
       <label>Title<br /><input v-model="eTitle" style="width: 100%" /></label>
 
       <br /><br />
-      <label>Video link (YouTube / Vimeo / direct .mp4)<br />
+      <label
+        >Video link (YouTube / Vimeo / direct .mp4)<br />
         <input
           v-model="eVideoUrl"
           placeholder="https://www.youtube.com/watch?v=..."
@@ -357,21 +368,24 @@ onMounted(loadAll)
 
       <!-- NEW: steps and goal -->
       <br /><br />
-      <label>Steps (one per line)<br />
+      <label
+        >Steps (one per line)<br />
         <textarea v-model="eSteps" rows="4" style="width: 100%" />
       </label>
 
       <br /><br />
       <label>Reps (e.g. 8–12) <input v-model="eReps" style="width: 100px" /></label>
       &nbsp;
-      <label>Seconds (timed exercise, leave empty for reps)
+      <label
+        >Seconds (timed exercise, leave empty for reps)
         <input v-model="eSeconds" type="number" min="0" style="width: 80px" />
       </label>
       &nbsp;
       <label><input v-model="ePerSide" type="checkbox" /> Per side</label>
 
       <br /><br />
-      <label>Extra text (Markdown, optional)<br />
+      <label
+        >Extra text (Markdown, optional)<br />
         <textarea
           v-model="eContent"
           rows="8"

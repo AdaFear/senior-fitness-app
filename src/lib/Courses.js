@@ -6,7 +6,7 @@ function withExercises(course) {
     .sort((a, b) => a.sort_order - b.sort_order)
     .map((link) => link.exercises)
     .filter(Boolean)
-  const {  ...rest } = course
+  const { ...rest } = course
   return { ...rest, exercises }
 }
 
